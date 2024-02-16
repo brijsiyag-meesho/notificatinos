@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "deployment.fullname" . }}
+  labels:
+    {{- include "deployment.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "deployment.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "deployment.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      containers:
+        - name: {{.Release.Name}}-app
+          image: {{.Values.image.repository}}:{{.Values.image.tag}}
+          ports:
+            - containerPort: 8080
+          env:
+            - name: MYSQL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Release.Name}}-secrets
+                  key: MYSQL_USERNAME
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Release.Name}}-secrets
+                  key: MYSQL_PASSWORD
+
+            - name: IMICONNECT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Release.Name}}-secrets
+                  key: IMICONNECT_API_KEY
+
+            - name: SPRING_DATA_SOURCE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{.Release.Name}}-configmap
+                  key: SPRING_DATA_SOURCE_URL
+
+            - name: REDIS_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{.Release.Name}}-configmap
+                  key: REDIS_DATABASE
+
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{.Release.Name}}-configmap
+                  key: REDIS_HOST
+
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{.Release.Name}}-configmap
+                  key: REDIS_PORT
+
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{.Release.Name}}-configmap
+                  key: KAFKA_BOOTSTRAP_SERVERS
+
+            - name: KAFKA_CONSUMER_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: {{.Release.Name}}-configmap
+                  key: KAFKA_CONSUMER_ID
+
+            - name: IMICONNECT_SMS_SEND_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{.Release.Name}}-configmap
+                  key: IMICONNECT_SMS_SEND_API_URL
+
+            - name: ELASTICSEARCH_CLUSTER_NODE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{.Release.Name}}-configmap
+                  key: ELASTICSEARCH_CLUSTER_NODE

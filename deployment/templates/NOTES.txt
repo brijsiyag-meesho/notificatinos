@@ -1,0 +1,1 @@
+Run `minikube service {{.Release.Name}}-service --url`
